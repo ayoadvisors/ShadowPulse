@@ -18,6 +18,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
+import com.ayoadvisors.shadowpulse.screens.login.LoginScreen
 import com.ayoadvisors.shadowpulse.ui.theme.Dimensions
 
 sealed class Screen(
@@ -44,13 +45,69 @@ sealed class Screen(
 }
 
 @Composable
-fun NavigationDots(
+fun ShadowPulseNavigation(
+    navController: NavHostController,
+    modifier: Modifier = Modifier,
+    startDestination: String = Screen.Login.route
+) {
+    Box(modifier = modifier.fillMaxSize()) {
+        NavHost(
+            navController = navController,
+            startDestination = startDestination,
+            modifier = Modifier.fillMaxSize()
+        ) {
+            composable(Screen.Login.route) {
+                LoginScreen(
+                    onNavigateToStart = {
+                        navController.navigate(Screen.Start.route) {
+                            popUpTo(Screen.Login.route) { inclusive = true }
+                        }
+                    }
+                )
+            }
+            composable(Screen.Start.route) {
+                // StartScreen will be implemented next
+                // For now, we'll leave this empty
+            }
+            composable(Screen.LiveHome.route) {
+                // Will be implemented later
+            }
+            composable(Screen.LiveMap.route) {
+                // Will be implemented later
+            }
+            composable(Screen.LiveLog.route) {
+                // Will be implemented later
+            }
+            composable(Screen.HistoricalMap.route) {
+                // Will be implemented later
+            }
+            composable(Screen.HistoricalLog.route) {
+                // Will be implemented later
+            }
+            composable(Screen.Export.route) {
+                // Will be implemented later
+            }
+            composable(Screen.Chat.route) {
+                // Will be implemented later
+            }
+        }
+
+        NavigationDots(
+            navController = navController,
+            modifier = Modifier.align(Alignment.BottomCenter)
+        )
+    }
+}
+
+@Composable
+private fun NavigationDots(
     navController: NavHostController,
     modifier: Modifier = Modifier
 ) {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
+    // Only show dots for main screens (not login or start)
     if (currentRoute == Screen.Login.route || currentRoute == Screen.Start.route) {
         return
     }
@@ -80,7 +137,7 @@ fun NavigationDots(
 }
 
 @Composable
-fun NavigationDot(
+private fun NavigationDot(
     selected: Boolean,
     onClick: () -> Unit
 ) {
@@ -94,52 +151,4 @@ fun NavigationDot(
             )
             .clickable(onClick = onClick)
     )
-}
-
-@Composable
-fun ShadowPulseNavigation(
-    navController: NavHostController,
-    modifier: Modifier = Modifier,
-    startDestination: String = Screen.Login.route
-) {
-    Box(modifier = modifier.fillMaxSize()) {
-        NavHost(
-            navController = navController,
-            startDestination = startDestination,
-            modifier = Modifier.fillMaxSize()
-        ) {
-            composable(Screen.Login.route) {
-                // LoginScreen will be implemented next
-            }
-            composable(Screen.Start.route) {
-                // StartScreen will be implemented
-            }
-            composable(Screen.LiveHome.route) {
-                // LiveHomeScreen will be implemented
-            }
-            composable(Screen.LiveMap.route) {
-                // LiveMapScreen will be implemented
-            }
-            composable(Screen.LiveLog.route) {
-                // LiveLogScreen will be implemented
-            }
-            composable(Screen.HistoricalMap.route) {
-                // HistoricalMapScreen will be implemented
-            }
-            composable(Screen.HistoricalLog.route) {
-                // HistoricalLogScreen will be implemented
-            }
-            composable(Screen.Export.route) {
-                // ExportScreen will be implemented
-            }
-            composable(Screen.Chat.route) {
-                // ChatScreen will be implemented
-            }
-        }
-
-        NavigationDots(
-            navController = navController,
-            modifier = Modifier.align(Alignment.BottomCenter)
-        )
-    }
 }
