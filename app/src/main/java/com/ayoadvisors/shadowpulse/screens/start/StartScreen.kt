@@ -7,14 +7,18 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import com.ayoadvisors.shadowpulse.util.permissions.PermissionType
 
 @Composable
 fun StartScreen(
     onNavigateToLiveHome: () -> Unit,
-    viewModel: StartViewModel = viewModel()
+    viewModel: StartViewModel
 ) {
     val state by viewModel.state.collectAsState()
+
+    LaunchedEffect(Unit) {
+        viewModel.checkPermissions() // Changed from requestPermissions to checkPermissions
+    }
 
     Column(
         modifier = Modifier
@@ -104,7 +108,13 @@ private fun TravelModeSection(
                     }
                 )
             ) {
-                Text(mode.name)
+                Text(
+                    text = when (mode) {
+                        TravelMode.CAR -> "Car"
+                        TravelMode.PUBLIC_TRANSPORT -> "Transit"
+                        TravelMode.WALKING -> "Walk"
+                    }
+                )
             }
         }
     }
@@ -112,8 +122,8 @@ private fun TravelModeSection(
 
 @Composable
 private fun PermissionsSection(
-    permissions: Map<Permission, Boolean>,
-    onPermissionToggle: (Permission) -> Unit
+    permissions: Map<PermissionType, Boolean>,
+    onPermissionToggle: (PermissionType) -> Unit
 ) {
     Column(
         modifier = Modifier.fillMaxWidth(),
@@ -136,10 +146,21 @@ private fun PermissionsSection(
                     checked = isGranted,
                     onCheckedChange = { onPermissionToggle(permission) }
                 )
-                Text(
-                    text = permission.displayName,
-                    modifier = Modifier.padding(start = 8.dp)
-                )
+                Column(
+                    modifier = Modifier
+                        .padding(start = 8.dp)
+                        .weight(1f)
+                ) {
+                    Text(
+                        text = permission.displayName,
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+                    Text(
+                        text = permission.description,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                    )
+                }
             }
         }
     }
@@ -172,101 +193,4 @@ private fun NavigationButtons(
             Text("Stop Navigation")
         }
     }
-}
-
-// File: screens/start/StartViewModel.kt
-package com.ayoadvisors.shadowpulse.screens.start
-
-import androidx.lifecycle.ViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
-
-class StartViewModel : ViewModel() {
-    private val _state = MutableStateFlow(StartState())
-    val state: StateFlow<StartState> = _state.asStateFlow()
-
-    fun onEvent(event: StartEvent) {
-        when (event) {
-            is StartEvent.FromLocationChanged -> {
-                _state.update { it.copy(fromLocation = event.location) }
-            }
-            is StartEvent.ToLocationChanged -> {
-                _state.update { it.copy(toLocation = event.location) }
-            }
-            is StartEvent.TravelModeChanged -> {
-                _state.update { it.copy(travelMode = event.mode) }
-            }
-            is StartEvent.PermissionToggled -> {
-                _state.update { currentState ->
-                    val updatedPermissions = currentState.permissions.toMutableMap().apply {
-                        put(event.permission, !(this[event.permission] ?: false))
-                    }
-                    currentState.copy(permissions = updatedPermissions)
-                }
-            }
-            StartEvent.StartNavigationClicked -> {
-                // Handle start navigation logic
-            }
-            StartEvent.StopNavigationClicked -> {
-                // Handle stop navigation logic
-            }
-        }
-
-        // Update canStartNavigation based on current state
-        updateCanStartNavigation()
-    }
-
-    private fun updateCanStartNavigation() {
-        _state.update { currentState ->
-            currentState.copy(
-                canStartNavigation = currentState.fromLocation.isNotBlank() &&
-                        currentState.toLocation.isNotBlank() &&
-                        currentState.permissions.values.all { it }
-            )
-        }
-    }
-}
-
-// File: screens/start/StartState.kt
-package com.ayoadvisors.shadowpulse.screens.start
-
-data class StartState(
-    val fromLocation: String = "",
-    val toLocation: String = "",
-    val travelMode: TravelMode = TravelMode.CAR,
-    val permissions: Map<Permission, Boolean> = Permission.values().associateWith { false },
-    val canStartNavigation: Boolean = false
-)
-
-// File: screens/start/StartEvent.kt
-package com.ayoadvisors.shadowpulse.screens.start
-
-sealed class StartEvent {
-    data class FromLocationChanged(val location: String) : StartEvent()
-    data class ToLocationChanged(val location: String) : StartEvent()
-    data class TravelModeChanged(val mode: TravelMode) : StartEvent()
-    data class PermissionToggled(val permission: Permission) : StartEvent()
-    object StartNavigationClicked : StartEvent()
-    object StopNavigationClicked : StartEvent()
-}
-
-// File: screens/start/models/TravelMode.kt
-package com.ayoadvisors.shadowpulse.screens.start
-
-enum class TravelMode {
-    CAR,
-    PUBLIC_TRANSPORT,
-    WALKING
-}
-
-// File: screens/start/models/Permission.kt
-package com.ayoadvisors.shadowpulse.screens.start
-
-enum class Permission(val displayName: String) {
-    WIFI("WiFi"),
-    BLUETOOTH("Bluetooth"),
-    CELLULAR("Cellular"),
-    LOCATION("Location")
 }

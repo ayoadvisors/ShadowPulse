@@ -1,3 +1,4 @@
+// File: MainActivity.kt
 package com.ayoadvisors.shadowpulse
 
 import android.os.Bundle
@@ -10,26 +11,32 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.compose.rememberNavController
 import com.ayoadvisors.shadowpulse.navigation.ShadowPulseNavigation
 import com.ayoadvisors.shadowpulse.ui.theme.ShadowPulseTheme
-import com.google.accompanist.systemuicontroller.rememberSystemUiController
+import com.ayoadvisors.shadowpulse.util.permissions.PermissionManager
+import com.ayoadvisors.shadowpulse.util.permissions.PermissionHandler
 
 class MainActivity : ComponentActivity() {
+    private lateinit var permissionManager: PermissionManager
+    private lateinit var permissionHandler: PermissionHandler
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // Initialize permission management
+        permissionManager = PermissionManager(this)
+        permissionHandler = PermissionHandler(this, permissionManager)
+        lifecycle.addObserver(permissionHandler)
+
         setContent {
-            val navController = rememberNavController()
-            val systemUiController = rememberSystemUiController()
-
             ShadowPulseTheme {
-                // Update status bar color based on theme
-                systemUiController.setSystemBarsColor(
-                    color = MaterialTheme.colorScheme.background
-                )
-
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    ShadowPulseNavigation(navController = navController)
+                    val navController = rememberNavController()
+                    ShadowPulseNavigation(
+                        navController = navController,
+                        permissionManager = permissionManager
+                    )
                 }
             }
         }

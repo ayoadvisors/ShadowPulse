@@ -1,14 +1,10 @@
 package com.ayoadvisors.shadowpulse.navigation
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -18,9 +14,13 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.ayoadvisors.shadowpulse.screens.login.LoginScreen
 import com.ayoadvisors.shadowpulse.screens.start.StartScreen
+import com.ayoadvisors.shadowpulse.screens.start.StartViewModel
+import com.ayoadvisors.shadowpulse.screens.start.StartViewModelFactory
 import com.ayoadvisors.shadowpulse.ui.theme.Dimensions
+import com.ayoadvisors.shadowpulse.util.permissions.PermissionManager as AppPermissionManager
 
 sealed class Screen(
     val route: String,
@@ -49,6 +49,7 @@ sealed class Screen(
 fun ShadowPulseNavigation(
     navController: NavHostController,
     modifier: Modifier = Modifier,
+    permissionManager: AppPermissionManager,
     startDestination: String = Screen.Login.route
 ) {
     Box(modifier = modifier.fillMaxSize()) {
@@ -67,12 +68,16 @@ fun ShadowPulseNavigation(
                 )
             }
             composable(Screen.Start.route) {
+                val viewModel: StartViewModel = viewModel(
+                    factory = StartViewModelFactory(permissionManager)
+                )
                 StartScreen(
                     onNavigateToLiveHome = {
                         navController.navigate(Screen.LiveHome.route) {
                             popUpTo(Screen.Start.route) { inclusive = true }
                         }
-                    }
+                    },
+                    viewModel = viewModel
                 )
             }
             composable(Screen.LiveHome.route) {
