@@ -19,6 +19,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.ayoadvisors.shadowpulse.screens.login.LoginScreen
+import com.ayoadvisors.shadowpulse.screens.start.StartScreen
 import com.ayoadvisors.shadowpulse.ui.theme.Dimensions
 
 sealed class Screen(
@@ -66,8 +67,13 @@ fun ShadowPulseNavigation(
                 )
             }
             composable(Screen.Start.route) {
-                // StartScreen will be implemented next
-                // For now, we'll leave this empty
+                StartScreen(
+                    onNavigateToLiveHome = {
+                        navController.navigate(Screen.LiveHome.route) {
+                            popUpTo(Screen.Start.route) { inclusive = true }
+                        }
+                    }
+                )
             }
             composable(Screen.LiveHome.route) {
                 // Will be implemented later
